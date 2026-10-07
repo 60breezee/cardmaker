@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('content')<div class="flex items-center justify-between"><h1 class="text-3xl font-bold">Mes cartes</h1><a class="rounded bg-slate-900 px-4 py-2 text-white" href="{{ route('cards.create') }}">Nouvelle carte</a></div>@include('cards._grid', ['cards' => $cards])@endsection
