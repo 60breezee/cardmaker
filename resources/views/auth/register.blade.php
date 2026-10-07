@@ -1,1 +1,34 @@
-@extends('layouts.app') @section('content')<div class="mx-auto max-w-md rounded-xl bg-white p-8 shadow"><h1 class="mb-6 text-2xl font-bold">Créer un compte</h1><form method="POST" action="{{ route('register') }}" class="space-y-4">@csrf<label class="block">Nom<input class="mt-1 w-full rounded border p-2" name="name" value="{{ old('name') }}" required></label><label class="block">Email<input class="mt-1 w-full rounded border p-2" type="email" name="email" required></label><label class="block">Mot de passe<input class="mt-1 w-full rounded border p-2" type="password" name="password" required></label><label class="block">Confirmation<input class="mt-1 w-full rounded border p-2" type="password" name="password_confirmation" required></label><button class="w-full rounded bg-slate-900 p-2 text-white">Créer mon compte</button></form></div>@endsection
+@extends('layouts.guest')
+
+@section('content')
+<div class="glass rounded-[20px] p-7 sm:p-8">
+    <p class="label-cap">Ouvrir un studio</p>
+    <h1 class="mb-6 mt-1 text-[15px] font-semibold tracking-[0.08em] text-fog">CRÉER UN COMPTE</h1>
+
+    <form method="POST" action="{{ route('register') }}" class="space-y-4">
+        @csrf
+        <label class="block">
+            <span class="label-cap mb-1.5 block">Nom</span>
+            <input class="ui-input" name="name" value="{{ old('name') }}" required autofocus>
+        </label>
+        <label class="block">
+            <span class="label-cap mb-1.5 block">Email</span>
+            <input class="ui-input" type="email" name="email" value="{{ old('email') }}" required>
+        </label>
+        <label class="block">
+            <span class="label-cap mb-1.5 block">Mot de passe</span>
+            <input class="ui-input" type="password" name="password" placeholder="8 caractères minimum" required>
+        </label>
+        <label class="block">
+            <span class="label-cap mb-1.5 block">Confirmation</span>
+            <input class="ui-input" type="password" name="password_confirmation" required>
+        </label>
+        <button class="btn-primary w-full">Créer mon compte</button>
+    </form>
+
+    <p class="mt-5 text-[12px] text-fog-3">
+        Déjà un compte ?
+        <a class="text-accent underline-offset-4 hover:underline" href="{{ route('login') }}">Connexion</a>
+    </p>
+</div>
+@endsection

@@ -1,1 +1,12 @@
-@extends('layouts.app') @section('content')<div class="flex items-center justify-between"><h1 class="text-3xl font-bold">Mes cartes</h1><a class="rounded bg-slate-900 px-4 py-2 text-white" href="{{ route('cards.create') }}">Nouvelle carte</a></div>@include('cards._grid', ['cards' => $cards])@endsection
+@extends('layouts.app')
+
+@section('content')
+<div class="mb-6 flex items-center justify-between gap-3">
+    <div>
+        <p class="label-cap">Atelier</p>
+        <h1 class="text-[15px] font-semibold tracking-[0.08em] text-fog">MES CARTES</h1>
+    </div>
+    <a href="{{ route('cards.create') }}" class="btn-primary">✦ Nouvelle carte</a>
+</div>
+@include('cards._grid', ['cards' => $cards])
+@endsection

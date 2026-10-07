@@ -14,6 +14,6 @@ class StoreCardRequest extends FormRequest
 
     public function rules(): array
     {
-        return ['template_id' => ['required', Rule::exists('templates', 'id')->where('is_active', true)], 'name' => ['required', 'string', 'max:120'], 'data' => ['nullable', 'array'], 'data.*' => ['nullable', 'string', 'max:1000']];
+        return ['template_id' => ['required', Rule::exists('templates', 'id')->where('is_active', true)], 'name' => ['required', 'string', 'max:120'], 'quantity' => ['nullable', 'integer', 'min:1', 'max:20'], 'data' => ['nullable', 'array'], 'data.*' => ['nullable', 'string', 'max:1000']];
     }
 }

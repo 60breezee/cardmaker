@@ -45,6 +45,10 @@ class QuotaService
 
     public function canUseTemplate(User $user, Template $template): bool
     {
+        if ($template->created_by !== null && (int) $template->created_by !== (int) $user->id) {
+            return false;
+        }
+
         if (! $template->is_active) {
             return false;
         }
@@ -55,6 +59,18 @@ class QuotaService
     public function canUsePremiumTemplates(User $user): bool
     {
         return (bool) ($this->plan($user)['premium_templates'] ?? false);
+    }
+
+    public function canCreateTemplate(User $user): bool
+    {
+        return (bool) ($this->plan($user)['custom_templates'] ?? false);
+    }
+
+    public function ensureCanCreateTemplate(User $user): void
+    {
+        if (! $this->canCreateTemplate($user)) {
+            throw ValidationException::withMessages(['template' => 'La création de modèles personnalisés est réservée aux abonnements premium.']);
+        }
     }
 
     public function ensureCanUseTemplate(User $user, Template $template): void

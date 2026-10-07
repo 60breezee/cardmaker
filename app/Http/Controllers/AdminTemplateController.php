@@ -11,7 +11,7 @@ class AdminTemplateController extends Controller
 {
     public function index()
     {
-        return view('admin.templates.index', ['templates' => Template::latest()->paginate(20)]);
+        return view('admin.templates.index', ['templates' => Template::whereNull('created_by')->latest()->paginate(20)]);
     }
 
     public function create()

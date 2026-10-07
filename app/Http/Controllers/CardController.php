@@ -12,6 +12,8 @@ use App\Services\ExportService;
 use App\Services\QuotaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CardController extends Controller
 {
@@ -36,17 +38,37 @@ class CardController extends Controller
     {
         $template = Template::findOrFail($request->integer('template_id'));
         $quota->ensureCanUseTemplate($request->user(), $template);
-        $quota->ensureCanCreateCard($request->user());
-        $card = $request->user()->cards()->create(['template_id' => $request->integer('template_id'), 'name' => $request->string('name'), 'data' => $request->input('data', [])]);
-        $logger->record('CARD_CREATED', $card, [], $request);
+        $quantity = max(1, $request->integer('quantity', 1));
+        $remaining = $quota->cardsRemaining($request->user());
+        if ($remaining !== null && $quantity > $remaining) {
+            throw ValidationException::withMessages(['quantity' => 'Votre quota mensuel ne permet pas de créer '.$quantity.' cartes.']);
+        }
 
-        return redirect()->route('cards.edit', $card)->with('success', 'Carte enregistrée.');
+        $name = $request->string('name')->toString();
+        $first = null;
+        for ($i = 1; $i <= $quantity; $i++) {
+            $data = $request->input('data', []);
+            if (empty($data['identifier'])) {
+                $data['identifier'] = 'CM-'.strtoupper(Str::random(6));
+            }
+            $card = $request->user()->cards()->create([
+                'template_id' => $template->id,
+                'name' => $quantity > 1 && $i > 1 ? $name.' ('.$i.')' : $name,
+                'data' => $data,
+            ]);
+            $first ??= $card;
+            $logger->record('CARD_CREATED', $card, ['quantity' => $quantity], $request);
+        }
+
+        return redirect()->route('cards.edit', $first)->with('success', $quantity > 1 ? $quantity.' cartes créées.' : 'Carte enregistrée.');
     }
 
-    public function edit(Card $card)
+    public function edit(Request $request, Card $card)
     {
         $this->authorize('view', $card);
-        $templates = Template::where('is_active', true)->get();
+        $templates = Template::where('is_active', true)
+            ->where(fn ($query) => $query->whereNull('created_by')->orWhere('created_by', $request->user()->id))
+            ->get();
 
         return view('cards.edit', compact('card', 'templates'));
     }
@@ -61,7 +83,13 @@ class CardController extends Controller
 
     public function update(UpdateCardRequest $request, Card $card, ActivityLogger $logger)
     {
-        $card->update(['name' => $request->string('name'), 'data' => $request->input('data', []), 'is_public' => $request->boolean('is_public')]);
+        $data = $request->input('data', []);
+        foreach (['photo', 'logo'] as $asset) {
+            if (! empty($card->data[$asset])) {
+                $data[$asset] ??= $card->data[$asset];
+            }
+        }
+        $card->update(['name' => $request->string('name'), 'data' => $data, 'is_public' => $request->boolean('is_public')]);
         $logger->record('CARD_UPDATED', $card, [], $request);
 
         return back()->with('success', 'Carte mise à jour.');
@@ -149,8 +177,10 @@ class CardController extends Controller
 
     public function asset(Card $card, string $asset)
     {
-        $this->authorize('view', $card);
         abort_unless(in_array($asset, ['photo', 'logo'], true), 404);
+        if (! $card->is_public) {
+            $this->authorize('view', $card);
+        }
 
         $path = $card->data[$asset] ?? null;
         abort_unless($path && Storage::disk()->exists($path), 404);

@@ -101,7 +101,7 @@ class CardGeneratorService
             return;
         }
         if ($type === 'qr_code') {
-            $payload = url('/verify/'.$card->public_identifier);
+            $payload = $this->qrPayload($card);
             $options = new QROptions(['outputType' => QRGdImagePNG::class, 'scale' => max(2, (int) (($w ?: 180) / 45))]);
             $source = @imagecreatefromstring((new QRCode($options))->render($payload));
             if ($source) {
@@ -113,9 +113,44 @@ class CardGeneratorService
 
     private function color(string $hex): int
     {
-        $hex = ltrim($hex, '#');
-        $hex = strlen($hex) === 3 ? preg_replace('/(.)/', '$1$1', $hex) : $hex;
+        $hex = ltrim(trim($hex), '#');
+        if (preg_match('/^[0-9a-f]{3}$/i', $hex)) {
+            $hex = preg_replace('/(.)/', '$1$1', $hex);
+        }
+        if (! is_string($hex) || ! preg_match('/^[0-9a-f]{6}$/i', $hex)) {
+            return 0;
+        }
 
         return (hexdec(substr($hex, 0, 2)) << 16) | (hexdec(substr($hex, 2, 2)) << 8) | hexdec(substr($hex, 4, 2));
+    }
+
+    public function qrPayload(Card $card): string
+    {
+        $data = $card->data;
+        $verifyUrl = url('/verify/'.$card->public_identifier);
+        $lines = ['BEGIN:VCARD', 'VERSION:3.0'];
+        foreach ([
+            'full_name' => 'FN',
+            'company' => 'ORG',
+            'job_title' => 'TITLE',
+            'phone' => 'TEL;TYPE=CELL',
+            'email' => 'EMAIL',
+        ] as $field => $key) {
+            $value = trim((string) ($data[$field] ?? ''));
+            if ($value !== '') {
+                $lines[] = $key.':'.$this->sanitizeVCard($value);
+            }
+        }
+        $lines[] = 'URL:'.$verifyUrl;
+        $identifier = trim((string) ($data['identifier'] ?? ''));
+        $lines[] = 'NOTE:IDENTIFIANT '.($identifier !== '' ? $this->sanitizeVCard($identifier) : $card->public_identifier).' / Verification: '.$verifyUrl;
+        $lines[] = 'END:VCARD';
+
+        return implode("\r\n", $lines);
+    }
+
+    private function sanitizeVCard(string $value): string
+    {
+        return preg_replace('/[\r\n\t,;:\\\\]/', ' ', $value) ?? '';
     }
 }

@@ -39,6 +39,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BulkGeneration::class);
     }
 
+    public function templates()
+    {
+        return $this->hasMany(Template::class, 'created_by');
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

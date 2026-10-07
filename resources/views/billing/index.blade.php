@@ -1,52 +1,71 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="flex flex-wrap items-end justify-between gap-3">
+<div class="mb-5 flex flex-wrap items-center justify-between gap-3">
     <div>
-        <p class="text-sm text-slate-500">Facturation</p>
-        <h1 class="text-3xl font-bold">Abonnement</h1>
+        <p class="label-cap">Facturation</p>
+        <h1 class="text-[15px] font-semibold tracking-[0.08em] text-fog">ABONNEMENT</h1>
     </div>
-    <div class="rounded-lg bg-slate-900 px-4 py-2 text-sm text-white">
+    <span class="pill is-active !cursor-default">
+        <span class="status-dot"></span>
         Plan actif : {{ strtoupper($subscription?->plan ?? 'FREE') }}
         @if($subscription?->expires_at)
-            <span class="text-slate-300">jusqu’au {{ $subscription->expires_at->format('d/m/Y') }}</span>
+            · jusqu’au {{ $subscription->expires_at->format('d/m/Y') }}
         @endif
-    </div>
+    </span>
 </div>
 
-<div class="mt-6 grid gap-6 md:grid-cols-3">
+<div class="grid gap-4 md:grid-cols-3">
     @foreach($plans as $name => $plan)
-        <div class="rounded-xl bg-white p-6 shadow">
-            <h2 class="text-xl font-bold uppercase">{{ $name }}</h2>
-            <p class="my-4 text-slate-500">{{ $plan['cards'] ?? 'Illimité' }} cartes · {{ $plan['exports'] ?? 'Illimité' }} exports</p>
-            @if($name !== 'free')
-                <form method="POST" action="{{ route('billing.checkout') }}">
-                    @csrf
-                    <input type="hidden" name="plan" value="{{ $name }}">
-                    <select class="mb-3 w-full rounded border p-2" name="currency">
-                        <option>XOF</option>
-                        <option>EUR</option>
-                        <option>USD</option>
-                    </select>
-                    <button class="w-full rounded bg-slate-900 px-4 py-2 text-white">Choisir ce plan</button>
-                </form>
-            @else
-                <span class="text-sm text-slate-500">Plan gratuit disponible par défaut</span>
-            @endif
+        <div class="glass flex flex-col rounded-[20px] p-6 {{ $name === 'free' ? 'border-[var(--tk-line-2)]' : '' }}">
+            <p class="label-cap">{{ $name === 'free' ? 'Gratuit' : strtoupper($name) }}</p>
+            <p class="mt-3 text-3xl font-light text-fog">{{ $plan['price']['XOF'] ?? '—' }} <span class="text-[11px] text-fog-3">XOF</span></p>
+            <p class="mt-3 text-[12px] leading-relaxed text-fog-2">
+                {{ $plan['cards'] === null ? 'Cartes illimitées' : $plan['cards'].' cartes / mois' }}
+                ·
+                {{ $plan['exports'] === null ? 'exports illimités' : $plan['exports'].' exports / mois' }}
+                @if($plan['premium_templates'] ?? false) · Modèles premium @endif
+                @if($plan['custom_templates'] ?? false) · Modèles personnalisés @endif
+                @if($plan['bulk'] ?? false) · Génération en masse @endif
+            </p>
+            <div class="mt-auto pt-5">
+                @if($name === 'free')
+                    <span class="pill !cursor-default">Plan par défaut</span>
+                @else
+                    @if(! $paymentsConfigured)
+                        <span class="pill !cursor-default !border-[var(--tk-line-3)]">Bientôt disponible</span>
+                    @else
+                        <form method="POST" action="{{ route('billing.checkout') }}" class="flex gap-2">
+                            @csrf
+                            <input type="hidden" name="plan" value="{{ $name }}">
+                            <select class="pill !cursor-pointer" name="currency">
+                                <option>XOF</option>
+                                <option>EUR</option>
+                                <option>USD</option>
+                            </select>
+                            <button class="btn-primary flex-1">Choisir ce plan</button>
+                        </form>
+                    @endif
+                @endif
+            </div>
         </div>
     @endforeach
 </div>
 
-<section class="mt-10 rounded-xl bg-white p-6 shadow">
-    <h2 class="text-xl font-bold">Derniers paiements</h2>
-    <div class="mt-4 divide-y">
+@if(! $paymentsConfigured)
+    <p class="mt-4 text-[11px] text-fog-3">Le paiement en ligne sera activé prochainement. Vos plans gratuits et déjà souscrits restent actifs.</p>
+@endif
+
+<section class="glass mt-6 rounded-[20px] p-6">
+    <p class="label-cap mb-4">Derniers paiements</p>
+    <div class="divide-y divide-[var(--tk-line)]">
         @forelse($payments as $payment)
-            <div class="flex flex-wrap justify-between gap-2 py-3 text-sm">
-                <span>{{ strtoupper($payment->currency) }} {{ $payment->amount }} · {{ $payment->provider ?? '—' }}</span>
-                <span class="text-slate-500">{{ $payment->status }} · {{ $payment->created_at->format('d/m/Y') }}</span>
+            <div class="flex flex-wrap justify-between gap-2 py-3 text-[12px]">
+                <span class="text-fog">{{ strtoupper($payment->currency) }} {{ number_format($payment->amount, 0, ',', ' ') }} · {{ $payment->provider ?? '—' }}</span>
+                <span class="text-fog-3">{{ $payment->status }} · {{ $payment->created_at->format('d/m/Y') }}</span>
             </div>
         @empty
-            <p class="py-3 text-sm text-slate-500">Aucun paiement enregistré.</p>
+            <p class="py-3 text-[12px] text-fog-3">Aucun paiement enregistré.</p>
         @endforelse
     </div>
 </section>

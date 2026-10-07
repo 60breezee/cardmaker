@@ -8,6 +8,11 @@ use RuntimeException;
 
 class NullPaymentService implements PaymentServiceInterface
 {
+    public function isConfigured(): bool
+    {
+        return false;
+    }
+
     public function createCheckout(User $user, string $plan, string $currency): array
     {
         throw new RuntimeException('Aucun fournisseur de paiement n’est configuré.');

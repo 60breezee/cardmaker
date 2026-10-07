@@ -17,6 +17,11 @@ class StripePaymentService implements PaymentServiceInterface
 {
     public function __construct(private readonly StripeClient $stripe) {}
 
+    public function isConfigured(): bool
+    {
+        return true;
+    }
+
     public function createCheckout(User $user, string $plan, string $currency): array
     {
         $config = config('plans.'.strtolower($plan));

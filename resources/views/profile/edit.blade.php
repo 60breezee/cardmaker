@@ -1,1 +1,56 @@
-@extends('layouts.app') @section('content')<h1 class="text-3xl font-bold">Paramètres</h1><div class="mt-6 grid gap-6 md:grid-cols-2"><form method="POST" action="{{ route('profile.update') }}" class="space-y-4 rounded-xl bg-white p-6 shadow">@csrf @method('PUT')<h2 class="text-xl font-semibold">Profil</h2><label class="block">Nom<input class="mt-1 w-full rounded border p-2" name="name" value="{{ auth()->user()->name }}" required></label><label class="block">Email<input class="mt-1 w-full rounded border p-2" type="email" name="email" value="{{ auth()->user()->email }}" required></label><button class="rounded bg-slate-900 px-4 py-2 text-white">Enregistrer</button></form><form method="POST" action="{{ route('profile.password') }}" class="space-y-4 rounded-xl bg-white p-6 shadow">@csrf @method('PUT')<h2 class="text-xl font-semibold">Mot de passe</h2><label class="block">Actuel<input class="mt-1 w-full rounded border p-2" type="password" name="current_password" required></label><label class="block">Nouveau<input class="mt-1 w-full rounded border p-2" type="password" name="password" required></label><label class="block">Confirmation<input class="mt-1 w-full rounded border p-2" type="password" name="password_confirmation" required></label><button class="rounded bg-slate-900 px-4 py-2 text-white">Modifier</button></form></div><form method="POST" action="{{ route('profile.destroy') }}" class="mt-6">@csrf @method('DELETE')<button class="text-red-600" onclick="return confirm('Supprimer définitivement le compte ?')">Supprimer mon compte</button></form>@endsection
+@extends('layouts.app')
+
+@section('content')
+<div class="mb-5">
+    <p class="label-cap">Compte</p>
+    <h1 class="text-[15px] font-semibold tracking-[0.08em] text-fog">PARAMÈTRES</h1>
+</div>
+
+<div class="grid gap-5 lg:grid-cols-2">
+    <form method="POST" action="{{ route('profile.update') }}" class="glass h-fit rounded-[20px] p-6">
+        @csrf
+        @method('PUT')
+        <p class="label-cap mb-4">Profil</p>
+        <div class="space-y-3">
+            <label class="block">
+                <span class="label-cap mb-1.5 block">Nom</span>
+                <input class="ui-input" name="name" value="{{ auth()->user()->name }}" required>
+            </label>
+            <label class="block">
+                <span class="label-cap mb-1.5 block">Email</span>
+                <input class="ui-input" type="email" name="email" value="{{ auth()->user()->email }}" required>
+            </label>
+            <button class="btn-primary w-full">Enregistrer</button>
+        </div>
+    </form>
+
+    <form method="POST" action="{{ route('profile.password') }}" class="glass h-fit rounded-[20px] p-6">
+        @csrf
+        @method('PUT')
+        <p class="label-cap mb-4">Mot de passe</p>
+        <div class="space-y-3">
+            <label class="block">
+                <span class="label-cap mb-1.5 block">Actuel</span>
+                <input class="ui-input" type="password" name="current_password" required>
+            </label>
+            <label class="block">
+                <span class="label-cap mb-1.5 block">Nouveau</span>
+                <input class="ui-input" type="password" name="password" required>
+            </label>
+            <label class="block">
+                <span class="label-cap mb-1.5 block">Confirmation</span>
+                <input class="ui-input" type="password" name="password_confirmation" required>
+            </label>
+            <button class="btn-primary w-full">Modifier</button>
+        </div>
+    </form>
+</div>
+
+<div class="mt-5 flex justify-end">
+    <form method="POST" action="{{ route('profile.destroy') }}">
+        @csrf
+        @method('DELETE')
+        <button class="pill !border-[rgba(255,120,90,.3)] !text-[rgba(255,140,110,.85)]" onclick="return confirm('Supprimer définitivement le compte ?')">Supprimer mon compte</button>
+    </form>
+</div>
+@endsection

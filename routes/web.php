@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('welcome');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -55,6 +55,8 @@ Route::get('/share/{identifier}', [CardController::class, 'verify'])->middleware
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/templates', [TemplateController::class, 'index'])->name('templates.index');
+    Route::get('/templates/creator', [TemplateController::class, 'builder'])->name('templates.builder');
+    Route::post('/templates', [TemplateController::class, 'storeCustom'])->name('templates.store');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -72,9 +74,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/cards/{card}/generate', [CardController::class, 'generate'])->middleware('throttle:generation')->name('cards.generate');
     Route::post('/cards/{card}/upload', [CardController::class, 'upload'])->middleware('throttle:generation')->name('cards.upload');
     Route::post('/cards/{card}/upload/{asset}', [CardController::class, 'uploadAsset'])->middleware('throttle:generation')->name('cards.upload-asset');
-    Route::get('/cards/{card}/asset/{asset}', [CardController::class, 'asset'])->name('cards.asset');
     Route::get('/cards/{card}/download/{format}', [CardController::class, 'download'])->name('cards.download');
 });
+
+Route::get('/cards/{card}/asset/{asset}', [CardController::class, 'asset'])->name('cards.asset');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminController::class, 'index'])->name('index');

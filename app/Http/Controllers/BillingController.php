@@ -8,7 +8,7 @@ use Illuminate\Http\Response;
 
 class BillingController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, PaymentServiceInterface $payments)
     {
         $user = $request->user();
 
@@ -20,11 +20,16 @@ class BillingController extends Controller
                 ->latest('started_at')
                 ->first(),
             'payments' => $user->payments()->latest()->take(10)->get(),
+            'paymentsConfigured' => $payments->isConfigured(),
         ]);
     }
 
     public function checkout(Request $request, PaymentServiceInterface $payments)
     {
+        if (! $payments->isConfigured()) {
+            return back()->with('error', 'Les paiements en ligne ne sont pas encore configurés.');
+        }
+
         $data = $request->validate(['plan' => ['required', 'in:pro,business'], 'currency' => ['required', 'in:XOF,EUR,USD']]);
         $checkout = $payments->createCheckout($request->user(), $data['plan'], $data['currency']);
 
